@@ -69,36 +69,109 @@ function berechneStrom() {
     output.style.display = 'block';
 }
 
-// 3. Steuer Schätzer (SEHR VEREINFACHT)
+// Hilfsfunktion: Berechnet die Grundsteuer nach §32a EStG 2024
+function getEStG(zvE) {
+    if (zvE <= 11604) {
+        return 0;
+    } else if (zvE <= 17005) {
+        const y = (zvE - 11604) / 10000;
+        return (922.98 * y + 1400) * y;
+    } else if (zvE <= 66760) {
+        const z = (zvE - 17005) / 10000;
+        return (181.19 * z + 2397) * z + 966.53;
+    } else if (zvE <= 277825) {
+        return 0.42 * zvE - 9972.98;
+    } else {
+        return 0.45 * zvE - 18307.73;
+    }
+}
+
+// 3. Steuer Rechner (Mit Klassen & Kirche)
 function berechneSteuer() {
     const brutto = parseFloat(document.getElementById('steuer-brutto').value);
+    const klasse = parseInt(document.getElementById('steuer-klasse').value);
+    const kircheSatz = parseInt(document.getElementById('steuer-kirche').value);
     const output = document.getElementById('steuer-result');
 
-    if (!brutto) return;
-
-    // Vereinfachte progressive Annäherung (KEIN exaktes deutsches Steuerrecht!)
-    // Grundfreibetrag ca 11.000 (Stand 2024 grob)
-    let steuer = 0;
-    const freibetrag = 11604; 
-
-    if (brutto > freibetrag) {
-        // Sehr grobe Formel für Durchschnittssteuersatz-Simulation
-        const zuVersteuerndes = brutto - freibetrag;
-        // Annahme: Progressiver Anstieg, durchschnittlich ca. 20-30% auf den Rest
-        // Dies ist nur für die Demo! Echte Steuerformeln sind komplexer.
-        if (brutto < 60000) {
-             steuer = zuVersteuerndes * 0.25; 
-        } else {
-             steuer = zuVersteuerndes * 0.35; // Höherer Satz für höhere Einkommen
-        }
+    if (!brutto || brutto < 0) {
+        output.style.display = 'none';
+        return;
     }
 
-    const netto = brutto - steuer;
+    // --- 1. Zu versteuerndes Einkommen (zvE) ermitteln ---
+    const werbungskosten = 1230; 
+    // Sozialabgaben Pauschale (Vorsorgeaufwendungen)
+    const vorsorgePauschale = brutto * 0.21; 
+    
+    let zvE = brutto - werbungskosten - vorsorgePauschale;
+
+    // Besonderheit Klasse 2 (Alleinerziehendenentlastungsbetrag)
+    if (klasse === 2) {
+        zvE -= 4260; 
+    }
+
+    if (zvE < 0) zvE = 0;
+
+    // --- 2. Lohnsteuer berechnen ---
+    let steuer = 0;
+
+    if (klasse === 3) {
+        // Splittingtarif: Wir tun so, als würde man das halbe Einkommen versteuern 
+        // und nehmen das Ergebnis mal 2. (Stark vereinfacht für Steuerklasse 3)
+        steuer = getEStG(zvE / 2) * 2;
+    } else {
+        // Grundtarif (Klasse 1, 2, 4)
+        // Hinweis: Klasse 5 & 6 sind hier vereinfacht wie Klasse 1 behandelt, 
+        // führen in der Realität aber zu höheren Abzügen.
+        steuer = getEStG(zvE);
+    }
+
+    // Abrunden
+    steuer = Math.floor(steuer);
+
+    // --- 3. Zusatzabgaben ---
+    
+    // Soli (Grenze hängt eigentlich von Klasse ab, hier vereinfacht)
+    let soli = 0;
+    const freigrenzeSoli = (klasse === 3) ? 36260 : 18130; // Doppelte Grenze bei Splitting
+    
+    if (steuer > freigrenzeSoli) {
+        soli = steuer * 0.055;
+    }
+
+    // Kirchensteuer (wird auf die Lohnsteuer berechnet)
+    let kirchensteuer = 0;
+    if (kircheSatz > 0) {
+        kirchensteuer = steuer * (kircheSatz / 100);
+    }
+
+    // Sozialabgaben (echter Geldabzug vom Brutto)
+    const sozialabgaben = brutto * 0.205; 
+
+    // --- 4. Ergebnis ---
+    const netto = brutto - steuer - soli - kirchensteuer - sozialabgaben;
 
     output.innerHTML = `
-        Geschätzte Lohnsteuer: <strong>ca. ${steuer.toFixed(2)} €</strong><br>
-        Netto (vor Sozialabgaben): <strong>ca. ${netto.toFixed(2)} €</strong><br>
-        <small>Hinweis: Dies ist eine grobe Schätzung ohne Sozialversicherung/Kiche.</small>
+        <table style="width:100%; text-align:left; border-collapse: collapse;">
+            <tr>
+                <td>Brutto:</td>
+                <td style="text-align:right"><strong>${brutto.toLocaleString('de-DE')} €</strong></td>
+            </tr>
+            <tr style="color:#777; font-size:0.9em;">
+                <td>- Sozialabgaben:</td>
+                <td style="text-align:right">${sozialabgaben.toLocaleString('de-DE', {maximumFractionDigits:0})} €</td>
+            </tr>
+            <tr style="color:#e74c3c;">
+                <td>- Lohnsteuer (Kl. ${klasse}):</td>
+                <td style="text-align:right">${steuer.toLocaleString('de-DE')} €</td>
+            </tr>
+            ${kirchensteuer > 0 ? `<tr style="color:#e74c3c;"><td>- Kirche (${kircheSatz}%):</td><td style="text-align:right">${kirchensteuer.toFixed(2)} €</td></tr>` : ''}
+            ${soli > 0 ? `<tr style="color:#e74c3c;"><td>- Soli:</td><td style="text-align:right">${soli.toFixed(2)} €</td></tr>` : ''}
+            <tr style="border-top: 2px solid #333; font-weight:bold; font-size: 1.1em;">
+                <td>Netto (ca.):</td>
+                <td style="text-align:right; color:#27ae60;">${netto.toLocaleString('de-DE', {maximumFractionDigits:2})} €</td>
+            </tr>
+        </table>
     `;
     output.style.display = 'block';
 }

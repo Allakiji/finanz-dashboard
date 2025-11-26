@@ -46,13 +46,32 @@
         </div>
 
         <div id="steuer" class="tab-content">
-            <h2>Einkommensteuer Schätzer</h2>
-            <p>Grobe Schätzung für Steuerklasse 1 (ohne Gewähr).</p>
-            <label>Brutto-Jahreseinkommen (€):</label>
-            <input type="number" id="steuer-brutto" placeholder="z.B. 45000">
-            <button onclick="berechneSteuer()">Schätzen</button>
-            <div class="result" id="steuer-result"></div>
-        </div>
+    <h2>Einkommensteuer Schätzer</h2>
+    <p>Schätzung nach EStG 2024.</p>
+    
+    <label>Brutto-Jahreseinkommen (€):</label>
+    <input type="number" id="steuer-brutto" placeholder="z.B. 50000">
+    
+    <label>Steuerklasse:</label>
+    <select id="steuer-klasse">
+        <option value="1">Klasse 1 (Ledig)</option>
+        <option value="2">Klasse 2 (Alleinerziehend)</option>
+        <option value="3">Klasse 3 (Verheiratet/Vielverdiener)</option>
+        <option value="4">Klasse 4 (Verheiratet/Gleich)</option>
+        <option value="5">Klasse 5 (Verheiratet/Wenigverdiener)</option>
+        <option value="6">Klasse 6 (Nebenjob)</option>
+    </select>
+
+    <label>Kirchensteuer:</label>
+    <select id="steuer-kirche">
+        <option value="0">Nein</option>
+        <option value="8">Ja (8% - Bayern/BaWü)</option>
+        <option value="9">Ja (9% - Restliche Bundesländer)</option>
+    </select>
+
+    <button onclick="berechneSteuer()">Schätzen</button>
+    <div class="result" id="steuer-result"></div>
+</div>
 
         <div id="profil" class="tab-content">
             <h2>Mein Profil</h2>
