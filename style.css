@@ -1,0 +1,106 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f7f6;
+    margin: 0;
+    padding: 20px;
+    color: #333;
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+h1, h2 { text-align: center; color: #2c3e50; }
+
+/* Tabs Navigation */
+.tabs {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #eee;
+}
+
+.tab-link {
+    background: none;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    color: #777;
+}
+
+.tab-link.active {
+    color: #3498db;
+    border-bottom: 3px solid #3498db;
+}
+
+.tab-content { display: none; }
+.tab-content.active { display: block; animation: fadeIn 0.5s; }
+
+/* Form Elements */
+label { display: block; margin-top: 15px; font-weight: bold; }
+input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box; /* Wichtig für Padding */
+}
+
+button {
+    width: 100%;
+    margin-top: 20px;
+    padding: 12px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover { background-color: #2980b9; }
+
+.result {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #e8f6f3;
+    border-left: 5px solid #2ecc71;
+    display: none; /* Anfangs versteckt */
+}
+
+.tip-box {
+    margin-top: 15px;
+    font-size: 0.9em;
+    color: #555;
+    background: #fff3cd;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.donate-btn {
+    display: inline-block;
+    background-color: #f1c40f;
+    color: #333;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 20px;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Profil Buttons Farben */
+.save-btn { background-color: #27ae60; }
+.load-btn { background-color: #8e44ad; }

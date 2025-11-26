@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finanz-Dashboard & Rechner</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Mein Finanz-Manager</h1>
+            <p>Homeoffice, Strom & Steuern im Griff</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-link active" onclick="openTab('homeoffice')">🏠 Homeoffice</button>
+            <button class="tab-link" onclick="openTab('strom')">⚡ Strom</button>
+            <button class="tab-link" onclick="openTab('steuer')">💶 Steuer (Schätzung)</button>
+            <button class="tab-link" onclick="openTab('profil')">💾 Profil & Daten</button>
+        </div>
+
+        <div id="homeoffice" class="tab-content active">
+            <h2>Homeoffice Pauschale (ab 2023)</h2>
+            <p>6€ pro Tag, max. 210 Tage (1.260€).</p>
+            <label>Anzahl Tage im Homeoffice:</label>
+            <input type="number" id="ho-tage" placeholder="z.B. 120">
+            <button onclick="berechneHomeoffice()">Berechnen</button>
+            <div class="result" id="ho-result"></div>
+        </div>
+
+        <div id="strom" class="tab-content">
+            <h2>Stromkosten Rechner</h2>
+            <label>Jahresverbrauch (kWh):</label>
+            <input type="number" id="strom-kwh" placeholder="z.B. 2500">
+            <label>Strompreis (Cent/kWh):</label>
+            <input type="number" id="strom-preis" placeholder="z.B. 35">
+            <label>Grundpreis (Euro/Monat):</label>
+            <input type="number" id="strom-grund" placeholder="z.B. 10">
+            <button onclick="berechneStrom()">Kosten berechnen</button>
+            <div class="result" id="strom-result"></div>
+            <div class="tip-box">
+                <strong>Tipp:</strong> Ein 2-Personen-Haushalt verbraucht im Schnitt ca. 2.500 kWh.
+            </div>
+        </div>
+
+        <div id="steuer" class="tab-content">
+            <h2>Einkommensteuer Schätzer</h2>
+            <p>Grobe Schätzung für Steuerklasse 1 (ohne Gewähr).</p>
+            <label>Brutto-Jahreseinkommen (€):</label>
+            <input type="number" id="steuer-brutto" placeholder="z.B. 45000">
+            <button onclick="berechneSteuer()">Schätzen</button>
+            <div class="result" id="steuer-result"></div>
+        </div>
+
+        <div id="profil" class="tab-content">
+            <h2>Mein Profil</h2>
+            <p>Speichere deine Eingaben lokal im Browser, um sie später wieder aufzurufen.</p>
+            <button onclick="datenSpeichern()" class="save-btn">Alles Speichern</button>
+            <button onclick="datenLaden()" class="load-btn">Daten Laden</button>
+            <p id="storage-msg"></p>
+        </div>
+
+        <footer>
+            <hr>
+            <h3>Gefällt dir das Tool?</h3>
+            <p>Unterstütze die Weiterentwicklung mit einer Spende.</p>
+            <a href="https://www.paypal.com" target="_blank" class="donate-btn">☕ Spendier mir einen Kaffee</a>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
