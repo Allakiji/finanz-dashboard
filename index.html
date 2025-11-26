@@ -71,6 +71,33 @@
 
     <button onclick="berechneSteuer()">Schätzen</button>
     <div class="result" id="steuer-result"></div>
+    <hr style="margin: 20px 0; border-top: 1px dashed #ccc;">
+    
+    <h3>Steuererklärung: Lohnt sich das?</h3>
+    <p>Prüfe, wie viel du zurückbekommen könntest, wenn du Dinge absetzt.</p>
+    
+    <button onclick="toggleRefund()" style="background-color: #8e44ad;">Rückerstattung berechnen</button>
+    
+    <div id="refund-area" style="display:none; margin-top:15px; background:#f9f9f9; padding:15px; border-radius:5px;">
+        <h4>Deine Ausgaben (Werbungskosten)</h4>
+        
+        <label>Einfacher Arbeitsweg (km):</label>
+        <input type="number" id="ref-km" placeholder="z.B. 15">
+        <small>Hinweis: Wird als Pendlerpauschale berechnet.</small>
+        
+        <label>Arbeitsmittel (Laptop, Bücher, Kleidung in €):</label>
+        <input type="number" id="ref-mittel" placeholder="z.B. 400">
+        
+        <label>Homeoffice-Pauschale (Übernahme aus anderem Tab möglich):</label>
+        <div style="display:flex; gap:10px;">
+            <input type="number" id="ref-ho" placeholder="Tage">
+            <button onclick="importHomeoffice()" style="margin-top:5px; width:auto; font-size:0.8em;">Aus Tab 1 laden</button>
+        </div>
+
+        <button onclick="berechneRueckerstattung()" style="background-color: #27ae60;">Erstattung schätzen</button>
+        
+        <div id="refund-result" class="result"></div>
+    </div>
 </div>
 
         <div id="profil" class="tab-content">

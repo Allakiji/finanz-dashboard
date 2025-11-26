@@ -214,3 +214,107 @@ function datenLaden() {
         alert("Keine gespeicherten Daten gefunden.");
     }
 }
+
+// --- ZUSATZ: RÜCKERSTATTUNGS-RECHNER ---
+
+function toggleRefund() {
+    const area = document.getElementById('refund-area');
+    area.style.display = (area.style.display === 'none') ? 'block' : 'none';
+}
+
+function importHomeoffice() {
+    const hoTage = document.getElementById('ho-tage').value;
+    if(hoTage) {
+        document.getElementById('ref-ho').value = hoTage;
+    } else {
+        alert("Bitte erst im Homeoffice-Tab Tage eingeben!");
+    }
+}
+
+function berechneRueckerstattung() {
+    const brutto = parseFloat(document.getElementById('steuer-brutto').value);
+    const klasse = parseInt(document.getElementById('steuer-klasse').value);
+    
+    // Eingaben für Absetzungen
+    const km = parseFloat(document.getElementById('ref-km').value) || 0;
+    const arbeitsmittel = parseFloat(document.getElementById('ref-mittel').value) || 0;
+    let hoTage = parseFloat(document.getElementById('ref-ho').value) || 0;
+
+    const output = document.getElementById('refund-result');
+
+    if (!brutto) {
+        output.innerHTML = "Bitte oben erst ein Brutto-Gehalt eingeben.";
+        output.style.display = "block";
+        return;
+    }
+
+    // 1. Ursprüngliche Steuerlast berechnen (Status Quo)
+    // Wir nutzen hier die gleiche Logik wie oben, aber brauchen den exakten Wert
+    const pauschaleWerbungskosten = 1230;
+    const vorsorge = brutto * 0.21;
+    let zvE_original = brutto - pauschaleWerbungskosten - vorsorge;
+    if (klasse === 2) zvE_original -= 4260; 
+    if (zvE_original < 0) zvE_original = 0;
+    
+    let steuer_original = 0;
+    if (klasse === 3) {
+        steuer_original = getEStG(zvE_original / 2) * 2;
+    } else {
+        steuer_original = getEStG(zvE_original);
+    }
+
+    // 2. Tatsächliche Werbungskosten berechnen
+    // Pendlerpauschale: 0.30€ für erste 20km, 0.38€ ab km 21. (Pro Arbeitstag ca. 220 Tage)
+    const arbeitstage = 220 - hoTage; // Einfache Annahme: Wer Homeoffice macht, fährt nicht
+    if (hoTage > 210) hoTage = 210; // Deckelung
+    
+    let fahrtkosten = 0;
+    if (km <= 20) {
+        fahrtkosten = km * 0.30 * arbeitstage;
+    } else {
+        fahrtkosten = (20 * 0.30 * arbeitstage) + ((km - 20) * 0.38 * arbeitstage);
+    }
+    
+    const hoKosten = hoTage * 6; // 6 Euro pro Tag
+    
+    const tatsaechlicheKosten = fahrtkosten + hoKosten + arbeitsmittel;
+    
+    // 3. Lohnt es sich?
+    let text = "";
+    let erstattung = 0;
+
+    if (tatsaechlicheKosten > pauschaleWerbungskosten) {
+        // JA! Wir rechnen neu mit den höheren Kosten
+        let zvE_neu = brutto - tatsaechlicheKosten - vorsorge;
+        if (klasse === 2) zvE_neu -= 4260;
+        if (zvE_neu < 0) zvE_neu = 0;
+        
+        let steuer_neu = 0;
+        if (klasse === 3) {
+            steuer_neu = getEStG(zvE_neu / 2) * 2;
+        } else {
+            steuer_neu = getEStG(zvE_neu);
+        }
+        
+        erstattung = steuer_original - steuer_neu;
+        
+        text = `
+            <strong>Glückwunsch! Deine Absetzungen lohnen sich.</strong><br>
+            Deine Werbungskosten (${tatsaechlicheKosten.toFixed(2)} €) liegen über der Pauschale von 1.230 €.<br><br>
+            Geschätzte Rückerstattung: <span style="font-size:1.4em; color:#27ae60;">+ ${erstattung.toFixed(2)} €</span>
+            <br><small>(Differenz zwischen gezahlter Lohnsteuer und tatsächlicher Steuerschuld)</small>
+        `;
+    } else {
+        // NEIN, Pauschale ist besser
+        text = `
+            <strong>Aktuell lohnt sich das Absetzen kaum.</strong><br>
+            Deine berechneten Kosten (${tatsaechlicheKosten.toFixed(2)} €) sind niedriger als die automatische Pauschale von 1.230 €.<br>
+            Das Finanzamt zieht automatisch den günstigeren Pauschbetrag ab.
+            <br><br>
+            <small>Tipp: Hast du Handwerkerkosten oder Spenden vergessen? Die zählen extra!</small>
+        `;
+    }
+
+    output.innerHTML = text;
+    output.style.display = 'block';
+}
