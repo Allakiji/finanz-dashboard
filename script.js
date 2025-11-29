@@ -1,3 +1,6 @@
+<script data-goatcounter="https://allakiji-household.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+        
 // Tab Navigation Logik
 function openTab(tabName) {
     const contents = document.getElementsByClassName('tab-content');
