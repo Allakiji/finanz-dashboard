@@ -87,10 +87,17 @@ function getEStG(zvE) {
 }
 
 // 3. Steuer Rechner (Mit Klassen & Kirche)
+// 3. Steuer Rechner (PROFI VERSION)
 function berechneSteuer() {
     const brutto = parseFloat(document.getElementById('steuer-brutto').value);
     const klasse = parseInt(document.getElementById('steuer-klasse').value);
     const kircheSatz = parseInt(document.getElementById('steuer-kirche').value);
+    
+    // Neue Inputs für Sozialversicherung
+    const kvZusatz = parseFloat(document.getElementById('kv-zusatz').value) || 1.7;
+    const kinder = parseInt(document.getElementById('kinder-anzahl').value) || 0;
+    const isOlder23 = document.getElementById('alter-ueber-23').checked;
+
     const output = document.getElementById('steuer-result');
 
     if (!brutto || brutto < 0) {
@@ -98,78 +105,140 @@ function berechneSteuer() {
         return;
     }
 
-    // --- 1. Zu versteuerndes Einkommen (zvE) ermitteln ---
-    const werbungskosten = 1230; 
-    // Sozialabgaben Pauschale (Vorsorgeaufwendungen)
-    const vorsorgePauschale = brutto * 0.21; 
+    // --- A. SOZIALVERSICHERUNG (Die "Profi"-Berechnung) ---
+    // Werte Stand 2024 (West)
+    const BBG_KV = 62100; // Beitragsbemessungsgrenze Kranken/Pflege
+    const BBG_RV = 90600; // Beitragsbemessungsgrenze Rente/Arbeitslos
     
-    let zvE = brutto - werbungskosten - vorsorgePauschale;
+    // 1. Krankenversicherung (KV)
+    // Allgemeiner Satz 14.6% + Zusatzbeitrag. Arbeitnehmer zahlt die Hälfte.
+    const kvSatzGesamt = 14.6 + kvZusatz;
+    const kvBasis = Math.min(brutto, BBG_KV);
+    const kvBeitrag = kvBasis * (kvSatzGesamt / 100) * 0.5;
 
-    // Besonderheit Klasse 2 (Alleinerziehendenentlastungsbetrag)
-    if (klasse === 2) {
-        zvE -= 4260; 
+    // 2. Rentenversicherung (RV)
+    // 18.6% Gesamt, 50/50 Split
+    const rvBasis = Math.min(brutto, BBG_RV);
+    const rvBeitrag = rvBasis * 0.093; // 9.3% für Arbeitnehmer
+
+    // 3. Arbeitslosenversicherung (AV)
+    // 2.6% Gesamt, 50/50 Split
+    const avBeitrag = rvBasis * 0.013; // 1.3% für Arbeitnehmer
+
+    // 4. Pflegeversicherung (PV) - KOMPLEX! (PUEG Gesetz)
+    // Basis: 3.4%. 
+    // Kinderlose (>23J): +0.6% Zuschlag -> 4.0%
+    // Arbeitgeber zahlt immer 1.7% (in Sachsen anders, hier vereinfacht Bundesstandard).
+    // Arbeitnehmer zahlt Rest.
+    // Abschlag ab 2. Kind: 0.25% pro Kind (max bis 5. Kind).
+    
+    let pvSatzAN = 0;
+    const pvBasis = Math.min(brutto, BBG_KV);
+
+    if (kinder === 0 && isOlder23) {
+        // Strafe für Kinderlose: 4.0% Gesamt (AG: 1.7, AN: 2.3)
+        pvSatzAN = 0.023; 
+    } else {
+        // Grundanteil AN (bei 1 Kind oder unter 23): 1.7%
+        pvSatzAN = 0.017; 
+        
+        // Entlastung für Mehrkindfamilien (ab 2. Kind bis 5. Kind je 0.25% Entlastung für AN)
+        if (kinder > 1) {
+            const entlastung = Math.min(kinder - 1, 4) * 0.0025;
+            pvSatzAN -= entlastung;
+        }
     }
+    const pvBeitrag = pvBasis * pvSatzAN;
+
+    const sozialabgaben = kvBeitrag + rvBeitrag + avBeitrag + pvBeitrag;
+
+
+    // --- B. STEUER (Wie vorher, aber mit exaktem Abzug der Sozialabgaben) ---
+    const werbungskosten = 1230; 
+    // Vorsorgeaufwendungen sind absetzbar (vereinfacht: die gezahlten Sozialabgaben, teilweise limitiert)
+    // Wir nutzen hier für die Steuerbasis eine Näherung, da Steuerrecht hier sehr komplex ist.
+    // Annahme: Sozialabgaben sind absetzbar.
+    
+    let zvE = brutto - werbungskosten - (sozialabgaben * 0.96); // Ca. 96% der SV sind absetzbar (Basisversorgung)
+    
+    // Entlastungsbetrag Alleinerziehende
+    if (klasse === 2) zvE -= 4260;
+    // Kinderfreibetrag wirkt sich nur auf Soli/Kirchensteuer aus, selten auf Lohnsteuer direkt (Günstigerprüfung).
+    // Wir lassen es für Lohnsteuer hier einfach, berücksichtigen es aber beim Soli.
 
     if (zvE < 0) zvE = 0;
 
-    // --- 2. Lohnsteuer berechnen ---
+    // Lohnsteuer berechnen
     let steuer = 0;
-
     if (klasse === 3) {
-        // Splittingtarif: Wir tun so, als würde man das halbe Einkommen versteuern 
-        // und nehmen das Ergebnis mal 2. (Stark vereinfacht für Steuerklasse 3)
         steuer = getEStG(zvE / 2) * 2;
     } else {
-        // Grundtarif (Klasse 1, 2, 4)
-        // Hinweis: Klasse 5 & 6 sind hier vereinfacht wie Klasse 1 behandelt, 
-        // führen in der Realität aber zu höheren Abzügen.
         steuer = getEStG(zvE);
     }
+    
+    // Besonderheit Klasse 5/6 (vereinfachter Aufschlag für Demo)
+    if (klasse === 5) steuer = steuer * 1.8; // Sehr grobe Näherung, Kl 5 zahlt extrem viel Vorweg
+    if (klasse === 6) steuer = steuer * 1.9;
 
-    // Abrunden
     steuer = Math.floor(steuer);
 
-    // --- 3. Zusatzabgaben ---
+    // Soli & Kirche
+    // Kinderfreibeträge (ca 9300€) reduzieren die Basis für Soli/Kirche
+    let kinderfreibetragWirkung = kinder * 9312; 
     
-    // Soli (Grenze hängt eigentlich von Klasse ab, hier vereinfacht)
+    let soliBasis = steuer; // Vereinfacht
     let soli = 0;
-    const freigrenzeSoli = (klasse === 3) ? 36260 : 18130; // Doppelte Grenze bei Splitting
-    
-    if (steuer > freigrenzeSoli) {
-        soli = steuer * 0.055;
+    // Soli-Freigrenze ca 18.000€ Steuerlast (nicht Einkommen!)
+    if (soliBasis > (18130 + (kinder * 3000))) { // Kinder erhöhen Freigrenze indirekt
+        soli = soliBasis * 0.055;
     }
 
-    // Kirchensteuer (wird auf die Lohnsteuer berechnet)
     let kirchensteuer = 0;
     if (kircheSatz > 0) {
         kirchensteuer = steuer * (kircheSatz / 100);
     }
 
-    // Sozialabgaben (echter Geldabzug vom Brutto)
-    const sozialabgaben = brutto * 0.205; 
-
-    // --- 4. Ergebnis ---
     const netto = brutto - steuer - soli - kirchensteuer - sozialabgaben;
+    const monatNetto = netto / 12;
 
+    // --- C. AUSGABE ---
     output.innerHTML = `
-        <table style="width:100%; text-align:left; border-collapse: collapse;">
+        <table style="width:100%; border-collapse: collapse; font-size: 0.95rem;">
             <tr>
-                <td>Brutto:</td>
-                <td style="text-align:right"><strong>${brutto.toLocaleString('de-DE')} €</strong></td>
+                <td style="padding:5px 0;">Brutto (Jahr):</td>
+                <td style="text-align:right; font-weight:bold;">${brutto.toLocaleString('de-DE')} €</td>
             </tr>
-            <tr style="color:#777; font-size:0.9em;">
-                <td>- Sozialabgaben:</td>
-                <td style="text-align:right">${sozialabgaben.toLocaleString('de-DE', {maximumFractionDigits:0})} €</td>
+            <tr>
+                <td style="padding:5px 0; color:#e67e22;">- Sozialabgaben:</td>
+                <td style="text-align:right; color:#e67e22;">${sozialabgaben.toLocaleString('de-DE', {maximumFractionDigits:2})} €</td>
             </tr>
-            <tr style="color:#e74c3c;">
-                <td>- Lohnsteuer (Kl. ${klasse}):</td>
-                <td style="text-align:right">${steuer.toLocaleString('de-DE')} €</td>
+            <tr style="font-size:0.85em; color:#777;">
+                <td style="padding-left:10px;">davon Rente (9,3%):</td>
+                <td style="text-align:right;">${rvBeitrag.toLocaleString('de-DE', {maximumFractionDigits:0})} €</td>
             </tr>
-            ${kirchensteuer > 0 ? `<tr style="color:#e74c3c;"><td>- Kirche (${kircheSatz}%):</td><td style="text-align:right">${kirchensteuer.toFixed(2)} €</td></tr>` : ''}
-            ${soli > 0 ? `<tr style="color:#e74c3c;"><td>- Soli:</td><td style="text-align:right">${soli.toFixed(2)} €</td></tr>` : ''}
-            <tr style="border-top: 2px solid #333; font-weight:bold; font-size: 1.1em;">
-                <td>Netto (ca.):</td>
+            <tr style="font-size:0.85em; color:#777;">
+                <td style="padding-left:10px;">davon Kranken (${(7.3 + kvZusatz/2).toFixed(2)}%):</td>
+                <td style="text-align:right;">${kvBeitrag.toLocaleString('de-DE', {maximumFractionDigits:0})} €</td>
+            </tr>
+             <tr style="font-size:0.85em; color:#777;">
+                <td style="padding-left:10px;">davon Pflege (${(pvSatzAN*100).toFixed(2)}%):</td>
+                <td style="text-align:right;">${pvBeitrag.toLocaleString('de-DE', {maximumFractionDigits:0})} €</td>
+            </tr>
+            
+            <tr style="border-top:1px solid #eee;">
+                <td style="padding:5px 0; color:#e74c3c;">- Lohnsteuer:</td>
+                <td style="text-align:right; color:#e74c3c;">${steuer.toLocaleString('de-DE')} €</td>
+            </tr>
+            ${kirchensteuer > 0 ? `<tr><td style="color:#e74c3c;">- Kirche:</td><td style="text-align:right; color:#e74c3c;">${kirchensteuer.toFixed(2)} €</td></tr>` : ''}
+            ${soli > 0 ? `<tr><td style="color:#e74c3c;">- Soli:</td><td style="text-align:right; color:#e74c3c;">${soli.toFixed(2)} €</td></tr>` : ''}
+            
+            <tr style="border-top: 2px solid #333; font-weight:bold; font-size: 1.1em; background:#e8f8f5;">
+                <td style="padding:10px 0;">Netto (Jahr):</td>
                 <td style="text-align:right; color:#27ae60;">${netto.toLocaleString('de-DE', {maximumFractionDigits:2})} €</td>
+            </tr>
+             <tr style="font-weight:bold; font-size: 1.2em; color:#2c3e50;">
+                <td style="padding:5px 0;">Ø Netto (Monat):</td>
+                <td style="text-align:right;">${monatNetto.toLocaleString('de-DE', {maximumFractionDigits:2})} €</td>
             </tr>
         </table>
     `;

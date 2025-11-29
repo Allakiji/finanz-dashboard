@@ -70,29 +70,53 @@
         </div>
 
         <div id="steuer" class="tab-content">
-            <h2>Einkommensteuer Schätzer (2024)</h2>
+            <h2>Netto-Rechner (Profi)</h2>
+            <p>Detaillierte Berechnung inkl. Sozialversicherungs-Details.</p>
             
             <label>Brutto-Jahreseinkommen (€):</label>
-            <input type="number" id="steuer-brutto" placeholder="z.B. 50000">
+            <input type="number" id="steuer-brutto" placeholder="z.B. 55000">
             
-            <label>Steuerklasse:</label>
-            <select id="steuer-klasse">
-                <option value="1">Klasse 1 (Ledig)</option>
-                <option value="2">Klasse 2 (Alleinerziehend)</option>
-                <option value="3">Klasse 3 (Verheiratet/Vielverdiener)</option>
-                <option value="4">Klasse 4 (Verheiratet/Gleich)</option>
-                <option value="5">Klasse 5 (Verheiratet/Wenigverdiener)</option>
-                <option value="6">Klasse 6 (Nebenjob)</option>
-            </select>
+            <div style="display:flex; gap:10px;">
+                <div style="flex:1;">
+                    <label style="margin-top:10px;">Steuerklasse:</label>
+                    <select id="steuer-klasse">
+                        <option value="1">Klasse 1 (Ledig)</option>
+                        <option value="2">Klasse 2 (Alleinerz.)</option>
+                        <option value="3">Klasse 3 (Verheiratet)</option>
+                        <option value="4">Klasse 4 (Verheiratet)</option>
+                        <option value="5">Klasse 5 (Verheiratet)</option>
+                        <option value="6">Klasse 6 (Nebenjob)</option>
+                    </select>
+                </div>
+                <div style="flex:1;">
+                    <label style="margin-top:10px;">Kirchensteuer:</label>
+                    <select id="steuer-kirche">
+                        <option value="0">Nein</option>
+                        <option value="8">Ja (8% By/BW)</option>
+                        <option value="9">Ja (9% Rest)</option>
+                    </select>
+                </div>
+            </div>
 
-            <label>Kirchensteuer:</label>
-            <select id="steuer-kirche">
-                <option value="0">Nein</option>
-                <option value="8">Ja (8% - Bayern/BaWü)</option>
-                <option value="9">Ja (9% - Andere)</option>
-            </select>
+            <label style="margin-top:15px; border-top:1px solid #eee; padding-top:10px; color:var(--accent);">Sozialversicherung Details:</label>
+            
+            <div style="display:flex; gap:10px; align-items: flex-end;">
+                <div style="flex:1;">
+                    <label>KV-Zusatzbeitrag (%):</label>
+                    <input type="number" id="kv-zusatz" value="1.7" step="0.1">
+                </div>
+                <div style="flex:1;">
+                    <label>Anzahl Kinder:</label>
+                    <input type="number" id="kinder-anzahl" value="0" placeholder="0">
+                </div>
+            </div>
+            
+            <div style="margin-top:10px;">
+                <input type="checkbox" id="alter-ueber-23" checked style="width:auto;">
+                <label for="alter-ueber-23" style="display:inline; font-weight:normal;">Ich bin älter als 23 (wichtig für Pflegevers.)</label>
+            </div>
 
-            <button onclick="berechneSteuer()">Schätzen</button>
+            <button onclick="berechneSteuer()">Netto berechnen</button>
             <div class="result" id="steuer-result"></div>
 
             <hr style="margin: 30px 0; border: 0; border-top: 1px dashed #ccc;">
@@ -101,19 +125,15 @@
             
             <div id="refund-area" style="display:none; margin-top:20px; padding:15px; background:#f8f9fa; border-radius:8px;">
                 <h4 style="margin-top:0;">Werbungskosten prüfen</h4>
-                
                 <label>Einfacher Arbeitsweg (km):</label>
                 <input type="number" id="ref-km" placeholder="z.B. 15">
-                
                 <label>Arbeitsmittel (€):</label>
                 <input type="number" id="ref-mittel" placeholder="Laptop, Bücher etc.">
-                
                 <label>Homeoffice-Tage:</label>
                 <div style="display:flex; gap:10px;">
                     <input type="number" id="ref-ho" placeholder="Tage">
                     <button onclick="importHomeoffice()" style="width:auto; margin-top:0; font-size:0.8rem; padding: 0 15px;">Importieren</button>
                 </div>
-
                 <button onclick="berechneRueckerstattung()" class="save-btn" style="margin-top:20px;">Erstattung berechnen</button>
                 <div id="refund-result" class="result"></div>
             </div>
