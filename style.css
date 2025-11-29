@@ -182,3 +182,39 @@ button:active { transform: scale(0.98); }
 /* --- Footer --- */
 footer { text-align: center; margin-top: 40px; color: #999; font-size: 0.8rem; }
 hr { border: 0; border-top: 1px solid #eee; margin: 30px 0; }
+
+/* Styling für den Steuer-Optimierer */
+details.tax-category {
+    background: #fff;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    overflow: hidden;
+}
+
+details.tax-category summary {
+    padding: 15px;
+    cursor: pointer;
+    font-weight: bold;
+    background-color: #f8f9fa;
+    list-style: none; /* Dreieck ausblenden (optional) */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+details.tax-category summary::after {
+    content: '+'; 
+    font-size: 1.2rem;
+    color: #777;
+}
+
+details.tax-category[open] summary::after {
+    content: '-';
+}
+
+details.tax-category .tax-content {
+    padding: 15px;
+    border-top: 1px solid #e0e0e0;
+    animation: slideUp 0.2s ease-out;
+}
