@@ -3,118 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finanz-Dashboard & Rechner</title>
+    
+    <title>Finanz-Manager: Homeoffice, Strom & Steuer Rechner</title>
+    <meta name="description" content="Kostenloses Tool für Homeoffice Pauschale, Einkommensteuer Schätzung und Stromkosten. Lokal, sicher und privat.">
+    <meta name="author" content="Allakiji">
+    
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💼</text></svg>">
+    
+    <script data-goatcounter="https://allakiji-finanz.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
 
     <div class="container">
+        
         <header>
             <h1>Mein Finanz-Manager</h1>
             <p>Homeoffice, Strom & Steuern im Griff</p>
         </header>
 
+        <div class="intro-text">
+            <p>
+                Willkommen beim kostenlosen <strong>Finanz-Rechner</strong>. 
+                Berechne deine <strong>Homeoffice Pauschale</strong>, schätze deine 
+                <strong>Steuer</strong> oder prüfe deine <strong>Stromkosten</strong>. 
+                Alle Daten bleiben zu 100% auf deinem Gerät.
+            </p>
+        </div>
+
         <div class="tabs">
             <button class="tab-link active" onclick="openTab('homeoffice')">🏠 Homeoffice</button>
             <button class="tab-link" onclick="openTab('strom')">⚡ Strom</button>
-            <button class="tab-link" onclick="openTab('steuer')">💶 Steuer (Schätzung)</button>
-            <button class="tab-link" onclick="openTab('profil')">💾 Profil & Daten</button>
+            <button class="tab-link" onclick="openTab('steuer')">💶 Steuer</button>
+            <button class="tab-link" onclick="openTab('profil')">💾 Profil</button>
         </div>
 
         <div id="homeoffice" class="tab-content active">
             <h2>Homeoffice Pauschale (ab 2023)</h2>
-            <p>6€ pro Tag, max. 210 Tage (1.260€).</p>
+            <p>6€ pro Tag, maximal 210 Tage (1.260€).</p>
+            
             <label>Anzahl Tage im Homeoffice:</label>
             <input type="number" id="ho-tage" placeholder="z.B. 120">
+            
             <button onclick="berechneHomeoffice()">Berechnen</button>
             <div class="result" id="ho-result"></div>
         </div>
 
         <div id="strom" class="tab-content">
             <h2>Stromkosten Rechner</h2>
+            
             <label>Jahresverbrauch (kWh):</label>
             <input type="number" id="strom-kwh" placeholder="z.B. 2500">
+            
             <label>Strompreis (Cent/kWh):</label>
             <input type="number" id="strom-preis" placeholder="z.B. 35">
+            
             <label>Grundpreis (Euro/Monat):</label>
             <input type="number" id="strom-grund" placeholder="z.B. 10">
+            
             <button onclick="berechneStrom()">Kosten berechnen</button>
             <div class="result" id="strom-result"></div>
+            
             <div class="tip-box">
-                <strong>Tipp:</strong> Ein 2-Personen-Haushalt verbraucht im Schnitt ca. 2.500 kWh.
+                <strong>Tipp:</strong> Ein 2-Personen-Haushalt verbraucht ca. 2.500 kWh.
             </div>
         </div>
 
         <div id="steuer" class="tab-content">
-    <h2>Einkommensteuer Schätzer</h2>
-    <p>Schätzung nach EStG 2024.</p>
-    
-    <label>Brutto-Jahreseinkommen (€):</label>
-    <input type="number" id="steuer-brutto" placeholder="z.B. 50000">
-    
-    <label>Steuerklasse:</label>
-    <select id="steuer-klasse">
-        <option value="1">Klasse 1 (Ledig)</option>
-        <option value="2">Klasse 2 (Alleinerziehend)</option>
-        <option value="3">Klasse 3 (Verheiratet/Vielverdiener)</option>
-        <option value="4">Klasse 4 (Verheiratet/Gleich)</option>
-        <option value="5">Klasse 5 (Verheiratet/Wenigverdiener)</option>
-        <option value="6">Klasse 6 (Nebenjob)</option>
-    </select>
+            <h2>Einkommensteuer Schätzer (2024)</h2>
+            
+            <label>Brutto-Jahreseinkommen (€):</label>
+            <input type="number" id="steuer-brutto" placeholder="z.B. 50000">
+            
+            <label>Steuerklasse:</label>
+            <select id="steuer-klasse">
+                <option value="1">Klasse 1 (Ledig)</option>
+                <option value="2">Klasse 2 (Alleinerziehend)</option>
+                <option value="3">Klasse 3 (Verheiratet/Vielverdiener)</option>
+                <option value="4">Klasse 4 (Verheiratet/Gleich)</option>
+                <option value="5">Klasse 5 (Verheiratet/Wenigverdiener)</option>
+                <option value="6">Klasse 6 (Nebenjob)</option>
+            </select>
 
-    <label>Kirchensteuer:</label>
-    <select id="steuer-kirche">
-        <option value="0">Nein</option>
-        <option value="8">Ja (8% - Bayern/BaWü)</option>
-        <option value="9">Ja (9% - Restliche Bundesländer)</option>
-    </select>
+            <label>Kirchensteuer:</label>
+            <select id="steuer-kirche">
+                <option value="0">Nein</option>
+                <option value="8">Ja (8% - Bayern/BaWü)</option>
+                <option value="9">Ja (9% - Andere)</option>
+            </select>
 
-    <button onclick="berechneSteuer()">Schätzen</button>
-    <div class="result" id="steuer-result"></div>
-    <hr style="margin: 20px 0; border-top: 1px dashed #ccc;">
-    
-    <h3>Steuererklärung: Lohnt sich das?</h3>
-    <p>Prüfe, wie viel du zurückbekommen könntest, wenn du Dinge absetzt.</p>
-    
-    <button onclick="toggleRefund()" style="background-color: #8e44ad;">Rückerstattung berechnen</button>
-    
-    <div id="refund-area" style="display:none; margin-top:15px; background:#f9f9f9; padding:15px; border-radius:5px;">
-        <h4>Deine Ausgaben (Werbungskosten)</h4>
-        
-        <label>Einfacher Arbeitsweg (km):</label>
-        <input type="number" id="ref-km" placeholder="z.B. 15">
-        <small>Hinweis: Wird als Pendlerpauschale berechnet.</small>
-        
-        <label>Arbeitsmittel (Laptop, Bücher, Kleidung in €):</label>
-        <input type="number" id="ref-mittel" placeholder="z.B. 400">
-        
-        <label>Homeoffice-Pauschale (Übernahme aus anderem Tab möglich):</label>
-        <div class="input-group" style="display:flex; gap:10px;">
-            <input type="number" id="ref-ho" placeholder="Tage">
-            <button onclick="importHomeoffice()" style="margin-top:5px; width:auto; font-size:0.8em;">Aus Tab 1 laden</button>
+            <button onclick="berechneSteuer()">Schätzen</button>
+            <div class="result" id="steuer-result"></div>
+
+            <hr style="margin: 30px 0; border: 0; border-top: 1px dashed #ccc;">
+            <h3>Steuererklärung: Lohnt sich das?</h3>
+            <button onclick="toggleRefund()" style="background-color: #8e44ad; margin-top:10px;">Rückerstattung prüfen</button>
+            
+            <div id="refund-area" style="display:none; margin-top:20px; padding:15px; background:#f8f9fa; border-radius:8px;">
+                <h4 style="margin-top:0;">Werbungskosten prüfen</h4>
+                
+                <label>Einfacher Arbeitsweg (km):</label>
+                <input type="number" id="ref-km" placeholder="z.B. 15">
+                
+                <label>Arbeitsmittel (€):</label>
+                <input type="number" id="ref-mittel" placeholder="Laptop, Bücher etc.">
+                
+                <label>Homeoffice-Tage:</label>
+                <div style="display:flex; gap:10px;">
+                    <input type="number" id="ref-ho" placeholder="Tage">
+                    <button onclick="importHomeoffice()" style="width:auto; margin-top:0; font-size:0.8rem; padding: 0 15px;">Importieren</button>
+                </div>
+
+                <button onclick="berechneRueckerstattung()" class="save-btn" style="margin-top:20px;">Erstattung berechnen</button>
+                <div id="refund-result" class="result"></div>
+            </div>
         </div>
-
-        <button onclick="berechneRueckerstattung()" style="background-color: #27ae60;">Erstattung schätzen</button>
-        
-        <div id="refund-result" class="result"></div>
-    </div>
-</div>
 
         <div id="profil" class="tab-content">
             <h2>Mein Profil</h2>
-            <p>Speichere deine Eingaben lokal im Browser, um sie später wieder aufzurufen.</p>
+            <p>Speichere deine Eingaben lokal im Browser.</p>
             <button onclick="datenSpeichern()" class="save-btn">Alles Speichern</button>
             <button onclick="datenLaden()" class="load-btn">Daten Laden</button>
-            <p id="storage-msg"></p>
+            <p id="storage-msg" style="text-align:center; margin-top:15px; font-weight:bold;"></p>
         </div>
 
         <footer>
             <hr>
-            
             <p>&copy; 2025 Finanz-Dashboard (Privates Projekt)</p>
-            
             <small>
-                <a href="impressum.html" style="color: #777; text-decoration: none;">Impressum & Datenschutz</a>
+                <a href="impressum.html">Impressum & Datenschutz</a> • 
+                <a href="https://allakiji-finanz.goatcounter.com" target="_blank">Statistik</a>
             </small>
         </footer>
     </div>
