@@ -1,6 +1,3 @@
-<script data-goatcounter="https://allakiji-household.goatcounter.com/count"
-        async src="//gc.zgo.at/count.js"></script>
-        
 // Tab Navigation Logik
 function openTab(tabName) {
     const contents = document.getElementsByClassName('tab-content');
@@ -48,26 +45,176 @@ function berechneHomeoffice() {
     output.style.display = 'block';
 }
 
-// 2. Strom Rechner
+// --- STROM RECHNER MIT WECHSEL-LOGIK ---
+
+let currentPersonProfile = 0;
+
+function setStromProfile(personen) {
+    currentPersonProfile = personen;
+    updateStromProfile();
+    const buttons = document.querySelectorAll('.profile-btn');
+    buttons.forEach((btn, index) => {
+        if (index + 1 === personen) btn.classList.add('active-profile');
+        else btn.classList.remove('active-profile');
+    });
+}
+
+function updateStromProfile() {
+    if (currentPersonProfile === 0) return;
+    const mitWasser = document.getElementById('strom-wasser').checked;
+    let kwh = 0;
+    // Durchschnittswerte Stromspiegel 2024
+    if (currentPersonProfile === 1) kwh = mitWasser ? 2000 : 1300;
+    else if (currentPersonProfile === 2) kwh = mitWasser ? 3500 : 2500;
+    else if (currentPersonProfile === 3) kwh = mitWasser ? 4250 : 3200;
+    else kwh = mitWasser ? 5000 : 4000;
+    document.getElementById('strom-kwh').value = kwh;
+    berechneStrom();
+}
+
 function berechneStrom() {
     const kwh = parseFloat(document.getElementById('strom-kwh').value);
     const preisCent = parseFloat(document.getElementById('strom-preis').value);
     const grundpreis = parseFloat(document.getElementById('strom-grund').value);
+    const plz = document.getElementById('strom-plz').value; // PLZ holen
     const output = document.getElementById('strom-result');
+    const tarifArea = document.getElementById('tarif-check-area');
 
     if (!kwh || !preisCent) {
         output.style.display = 'none';
+        tarifArea.style.display = 'none';
         return;
     }
 
+    // 1. IST-Kosten
     const arbeitspreisGesamt = kwh * (preisCent / 100);
     const grundpreisGesamt = grundpreis * 12;
     const kostenJahr = arbeitspreisGesamt + grundpreisGesamt;
     const kostenMonat = kostenJahr / 12;
 
     output.innerHTML = `
-        Jahreskosten: <strong>${kostenJahr.toFixed(2)} €</strong><br>
-        Monatlicher Abschlag: <strong>${kostenMonat.toFixed(2)} €</strong>
+        <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+            <div>
+                <span style="color:#777; font-size:0.9rem;">Abschlag aktuell:</span><br>
+                <span style="font-size:1.8rem; font-weight:bold; color:#2c3e50;">${kostenMonat.toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2})} €</span>
+            </div>
+            <div style="text-align:right;">
+                <span style="color:#777; font-size:0.9rem;">Jahreskosten:</span><br>
+                <span style="font-size:1.2rem; font-weight:bold;">${kostenJahr.toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2})} €</span>
+            </div>
+        </div>
+        <hr style="margin:10px 0; border-color:#eee;">
+        <p style="margin:0; font-size:0.85rem; color:#666;">
+            Davon Grundgebühr: <strong>${grundpreisGesamt.toFixed(2)} €</strong> (${((grundpreisGesamt/kostenJahr)*100).toFixed(1)}%)
+        </p>
+    `;
+    output.style.display = 'block';
+
+    // 2. CHART
+    const chartContainer = document.getElementById('strom-chart-container');
+    chartContainer.style.display = 'block';
+    const ctx = document.getElementById('stromChart').getContext('2d');
+    if (window.myStromChart) window.myStromChart.destroy();
+    window.myStromChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Grundgebühr', 'Verbrauch'],
+            datasets: [{
+                data: [grundpreisGesamt, arbeitspreisGesamt],
+                backgroundColor: ['#95a5a6', '#f1c40f'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'right' }, title: { display: false } }
+        }
+    });
+
+    // 3. TARIF-CHECK & WECHSEL-LOGIK
+    // Annahme: Marktpreis Neukunden ca. 26 Cent
+    const marktPreisNeu = 26.0; 
+    
+    if (preisCent > (marktPreisNeu + 1)) {
+        const ersparnis = kwh * ((preisCent - marktPreisNeu) / 100);
+        
+        // Check24 Deep Link
+        const targetPlz = plz || "";
+        const vergleichsLink = `https://www.check24.de/strom/vergleich/check24/?total_consumption=${kwh}&zipcode=${targetPlz}&output=calculation`;
+
+        tarifArea.innerHTML = `
+            <h4 style="margin:0 0 10px 0; color:#27ae60;">💰 Spar-Alarm!</h4>
+            <p style="font-size:0.95rem; margin-bottom:15px;">
+                Du zahlst <strong>${preisCent} Ct/kWh</strong>. Neukunden zahlen aktuell oft nur ca. <strong>${marktPreisNeu} Ct/kWh</strong>.
+                <br>Mögliches Sparpotenzial:
+            </p>
+            <div style="font-size:2rem; font-weight:bold; color:#27ae60; margin-bottom:15px;">
+                ca. ${ersparnis.toLocaleString('de-DE', {maximumFractionDigits:0})} € / Jahr
+            </div>
+            
+            <a href="${vergleichsLink}" target="_blank" style="display:inline-block; background:#ff9f00; color:#fff; padding:12px 20px; text-decoration:none; border-radius:5px; font-weight:bold; box-shadow:0 2px 5px rgba(0,0,0,0.2);">
+                🔎 Tarife in ${targetPlz || "deiner Region"} vergleichen
+            </a>
+            <p style="font-size:0.7rem; color:#999; margin-top:10px;">
+                *Link öffnet Check24. Berechnung basiert auf Markt-Durchschnitt.
+            </p>
+        `;
+        tarifArea.style.display = 'block';
+        tarifArea.style.borderColor = "#27ae60";
+        tarifArea.style.boxShadow = "0 4px 15px rgba(39, 174, 96, 0.15)";
+    } else {
+        tarifArea.innerHTML = `
+            <h4 style="margin:0 0 5px 0; color:#2980b9;">👍 Guter Tarif!</h4>
+            <p style="font-size:0.9rem; margin:0;">
+                Dein Preis von <strong>${preisCent} Ct/kWh</strong> ist aktuell fair.
+            </p>
+        `;
+        tarifArea.style.display = 'block';
+        tarifArea.style.borderColor = "#3498db";
+        tarifArea.style.boxShadow = "none";
+    }
+}
+
+// Einzelgeräte Rechner
+function berechneGeraet() {
+    const watt = parseFloat(document.getElementById('device-watt').value);
+    const hours = parseFloat(document.getElementById('device-hours').value);
+    const preisCent = parseFloat(document.getElementById('strom-preis').value) || 35; // Fallback 35 Cent
+    
+    const output = document.getElementById('device-result');
+
+    if(!watt || !hours) return;
+
+    // Berechnung: Watt * Stunden * 365 Tage / 1000 (für kWh) * Preis
+    const kwhJahr = (watt * hours * 365) / 1000;
+    const kostenJahr = kwhJahr * (preisCent / 100);
+
+    output.innerHTML = `
+        Dieses Gerät verbraucht ca. <strong>${kwhJahr.toLocaleString('de-DE', {maximumFractionDigits:0})} kWh</strong> pro Jahr.<br>
+        Kostenfaktor: <strong style="color:#e67e22; font-size:1.2rem;">${kostenJahr.toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2})} € / Jahr</strong>
+        <br><small>(Bei einem Strompreis von ${preisCent} Cent/kWh)</small>
+    `;
+    output.style.display = 'block';
+}
+
+// Balkonkraftwerk Rechner
+function berechneSolar() {
+    const erzeugung = parseFloat(document.getElementById('solar-kwh').value);
+    const preisCent = parseFloat(document.getElementById('strom-preis').value) || 35;
+    
+    const output = document.getElementById('solar-result');
+    
+    if(!erzeugung) return;
+
+    const ersparnis = erzeugung * (preisCent / 100);
+    // Amortisation grob schätzen (Annahme: Set kostet 400€)
+    const setPreis = 400;
+    const jahre = setPreis / ersparnis;
+
+    output.innerHTML = `
+        Du sparst jährlich: <strong style="color:#27ae60; font-size:1.2rem;">${ersparnis.toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2})} €</strong>
+        <br><small>Bei Anschaffungskosten von ca. 400€ hättest du das Geld in <strong>${jahre.toFixed(1)} Jahren</strong> wieder drin!</small>
     `;
     output.style.display = 'block';
 }

@@ -218,3 +218,25 @@ details.tax-category .tax-content {
     border-top: 1px solid #e0e0e0;
     animation: slideUp 0.2s ease-out;
 }
+
+/* Styling für Strom-Profil Buttons */
+.profile-btn {
+    flex: 1;
+    padding: 8px;
+    background: #e0e0e0;
+    color: #555;
+    border: 1px solid #ccc;
+    margin-top: 0; /* Override default button margin */
+    font-size: 0.9rem;
+    border-radius: 6px;
+}
+
+.profile-btn:hover {
+    background: #d5d5d5;
+}
+
+.profile-btn.active-profile {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+}
